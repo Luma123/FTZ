@@ -11,6 +11,7 @@ import java.util.Map;
 import java.text.SimpleDateFormat;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.ibatis.annotations.Param;
@@ -26,14 +27,17 @@ import com.web.service.bookService;
 import net.sf.json.JSONArray;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageInfo;
 import com.web.entity.PhotoRecord;
 import com.web.entity.PhotoWord;
+import com.web.entity.Reply;
 import com.web.entity.Users;
 import com.web.entity.WordSourceInfo;
 import com.web.entity.book;
 import com.web.service.UserService;
 import com.web.service.photorecordService;
 import com.web.service.photowordService;
+import com.web.service.replyService;
 import com.web.service.wordService;
 import com.web.service.bookService;
 import com.web.service.bookRecordService;
@@ -49,6 +53,8 @@ public class personcontroller {
 	private wordService wordService;
 	@Autowired
 	private photowordService photoWordService;
+	@Autowired
+	private replyService rservice;
 
 	@Autowired
 	private bookService bookService;
@@ -335,6 +341,7 @@ public class personcontroller {
 //		}
 //		return "personalPhoto/recDetail";
 //	}
+  
 	@RequestMapping("/recognizeDetail2")
 	public String show(HttpServletRequest request) throws JSONException, IOException{
 		String photoSrc = request.getParameter("photoSrc");
@@ -357,6 +364,62 @@ public class personcontroller {
 		//之前的脏数据recognized字段为null
 		return recognized==null?0:recognized;
 	}
+	@RequestMapping("/personreply")
+	public String personreply(HttpSession session,HttpServletRequest request,int page,int size){
+		Users user = (Users) session.getAttribute("user");
+		Users u = userService.getUserID(user.getPhonenumber());
+		Long userId = u.getUserId();
+		System.out.println("userId:"+userId);
+		List<Reply> list = rservice.getReplys(userId,page,size);
+		PageInfo pageInfo = new PageInfo(list);
+		request.setAttribute("pageInfo", pageInfo);
+		return "person/topersonReply";
+	}
+	@RequestMapping("replydelete")
+	public void replydelete(HttpSession session,HttpServletRequest request,HttpServletResponse response,Long replyId) throws Exception{
+		rservice.deleteReply(replyId);
+		request.getRequestDispatcher("/personreply?page=1&size=10").forward(request, response);
+		return;
+	}
+	
+	@RequestMapping("/personfeedback")
+	public String personfeedback(HttpSession session,HttpServletRequest request,int page,int size){
+		Users user = (Users) session.getAttribute("user");
+		Users u = userService.getUserID(user.getPhonenumber());
+		Long userId = u.getUserId();
+		System.out.println("userId:"+userId);
+		List<Reply> list = rservice.getFeedbacks(userId,page,size);
+		PageInfo pageInfo = new PageInfo(list);
+		request.setAttribute("pageInfo", pageInfo);
+		return "person/tofeedback";
+	}
+	
+	@RequestMapping("feedbackdelete")
+	public void feedbackdelete(HttpSession session,HttpServletRequest request,HttpServletResponse response,Long replyId) throws Exception{
+		rservice.deleteFeedback(replyId);
+		request.getRequestDispatcher("/personfeedback?page=1&size=10").forward(request, response);
+		return;
+	}
+	
+	@RequestMapping("/addfeedback")
+	public String addfeedback() {
+		return "person/feedback";
+	}
+	
+	@RequestMapping("/addfeedback2")
+	public void addfeedback2(HttpServletRequest request,HttpServletResponse response,HttpSession session,String phonenumber,Long resourceId,String replyContent) throws Exception{
+		Users u = userService.getUserID(phonenumber);
+		Long userId = u.getUserId();
+		replyContent = new String(replyContent.getBytes("ISO-8859-1"), "UTF-8");
+		Reply reply = new Reply();
+		reply.setUserId(userId);
+		reply.setResourceId(resourceId);
+		reply.setReplyContent(replyContent);
+		rservice.addReply(reply);
+		request.getRequestDispatcher("/personfeedback?page=1&size=10").forward(request, response);
+		return; 
+	}
+
 	//从书籍查找文字来源,跳转到searchCharFormPdf.jsp页面
 		@RequestMapping("/searchCharFromPdf")
 		public String searchCharFromPdf(HttpSession session,HttpServletRequest request){
@@ -592,4 +655,5 @@ public class personcontroller {
 	    request.setAttribute("bookInfoJson", JSONObject.toJSONString(mapList));
 	    return "person/taskManageList";
 	    }
+
 }

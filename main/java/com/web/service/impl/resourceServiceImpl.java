@@ -48,4 +48,26 @@ public class resourceServiceImpl implements resourceService{
 		return list;
 	}
 
+	@Override
+	public boolean addResource(Resource resource) {
+		// TODO Auto-generated method stub
+		if(rdao.addResource(resource)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	@Override
+	public Double getResourceCredit(Long resourceId) {
+		// TODO Auto-generated method stub
+		return rdao.getResourceCredit(resourceId);
+	}
+
+	@Override
+	public Long getUserId(Long resourceId) {
+		// TODO Auto-generated method stub
+		return rdao.getUserId(resourceId);
+	}
+
 }

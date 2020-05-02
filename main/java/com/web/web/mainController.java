@@ -93,14 +93,19 @@ public class mainController {
 	public String first() {
 		return "firstpage";
 	}
+	@RequestMapping("/aboutus")
+	public String about() {
+		return "aboutus";
+	}
     //文字识别
 	@RequestMapping("/recognize2")
 	@ResponseBody
 	public JSONArray testJson(HttpServletRequest request, Model model) {
+		System.out.println("before.............") ;
 		String ds = request.getParameter("ds");
 		JSONArray json = JSONArray.fromObject(ds);
 		
-		//System.out.println(json.toString());
+		System.out.println(json.toString());
 		
 		ImageSplit sp = new ImageSplit();
 		ArrayList<posepoint> dirlist = null;
@@ -110,10 +115,12 @@ public class mainController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		System.out.println(dirlist);
 		dirlist = userService.recongnize(dirlist);
+		System.out.println("middle.............") ;
 		JSONArray jsonArray = JSONArray.fromObject(dirlist);
 		//System.out.println(jsonArray.toString());
+		System.out.println("after.............") ;
 		return jsonArray;
 	}
 	
@@ -253,7 +260,11 @@ public class mainController {
 						// 新增========
 			session.setAttribute("user", user);// 放在session域中，执行某些操作需要先判断用户是否登录
 			System.out.println("登录成功！");
-			return "shibeipingtai";
+			if((String) session.getAttribute("preurl")==null){
+				return "index";
+			}else{
+				return (String) session.getAttribute("preurl");
+			}
 		} else {
 			request.setAttribute("msg", "账号或密码错误，请重新登录！");
 			System.out.println("登录失败！");
